@@ -8,8 +8,41 @@ networks:
     driver: bridge
 services:
 
+  app:
+    image: django:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "export DOCKER_ENV=1; python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env.docker
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DOCKER_ENV=1
+    depends_on:
+      - db
+  redis:
+    image: "redis:alpine"
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "export DOCKER_ENV=1;  python -m celery -A rewardsapp worker --loglevel=info"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
   db:
-    container_name: postgres
     image: postgres:16.1-alpine
     environment:
       - PGPORT=${POSTGRES_PORT}
@@ -19,8 +52,6 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres-vol:/var/lib/postgresql/data
-    networks:
-      - postgres-net
     expose:
       - ${POSTGRES_PORT}
     ports:
@@ -42,31 +73,3 @@ services:
           /usr/local/bin/docker-entrypoint.sh postgres
         fi
       "
-
-  app:
-    container_name: app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file:
-      - .env.docker
-    environment:
-      - DOCKER_ENV=1
-      - DEBUG=False
-
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-
-    depends_on:
-      - db
-    networks:
-      - postgres-net
-
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: 5
-
-    command: [ "python", "manager.py", "runserver" ]
-    restart: unless-stopped

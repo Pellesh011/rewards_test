@@ -1,0 +1,23 @@
+имеется два env файла для запуска (.env.docker) в докере
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+POSTGRES_DB=rewards_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+APP_PORT=8000
+DEBUG=False
+DOCKER_ENV=1
+REDIS_HOST=redis
+
+ и без (.env)
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=rewards_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+APP_PORT=8000
+DEBUG=False
+DOCKER_ENV=0
+REDIS_HOST=localhost
+
+

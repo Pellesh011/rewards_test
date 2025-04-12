@@ -12,9 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from datetime import timedelta
 import environ
-
-if os.environ.get('DOCKER_ENV'):
+docker =  os.environ.get('DOCKER_ENV')
+if docker is not None:
     env_file = os.path.join(os.path.dirname(__file__), '..', '.env.docker')
 else:
     env_file = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -57,8 +58,24 @@ INSTALLED_APPS = [
     'corsheaders',
     'rewards',
     'accounts',
+    'drf_yasg'
 ]
 
+redis_host = config('REDIS_HOST')
+CELERY_BROKER_URL = f'redis://{redis_host}:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30), 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), 
+    'ROTATE_REFRESH_TOKENS': True,                  
+    'BLACKLIST_AFTER_ROTATION': True,               
+    'ALGORITHM': 'HS256',                          
+    'SIGNING_KEY': SECRET_KEY,                     
+    'AUTH_HEADER_TYPES': ('Bearer',),              
+}
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -88,14 +105,14 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-
-
 ROOT_URLCONF = 'rewardsapp.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+         'DIRS': [
+            os.path.join(os.path.dirname(__file__), 'libs/drf-yasg/templates'),  # Укажите путь к шаблонам
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,7 +136,7 @@ DATABASES = {
         'NAME': config('POSTGRES_DB'),
         'USER': config('POSTGRES_USER'),
         'PASSWORD': config('POSTGRES_PASSWORD'),
-        'HOST': config('POSTGRES_HOST', default='postgres'),
+        'HOST': config('POSTGRES_HOST', default='db'),
         'PORT': config('POSTGRES_PORT', default=5432, cast=int),
     }
 }
@@ -159,7 +176,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # Путь к вашим статическим файлам
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

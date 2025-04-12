@@ -5,6 +5,8 @@ npm-debug.log
 yarn-debug.log
 yarn-error.log
 
+*.pyc
+
 # Build output
 dist/
 build/
@@ -14,8 +16,7 @@ out/
 .venv/
 
 # Environment variables
-.env
-.env.docker
+
 .env.local
 .env.development.local
 .env.test.local
